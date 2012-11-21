@@ -1,3 +1,28 @@
+/*
+ * Copyright (c) 2012, Ivo Vachkov
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met: 
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer. 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution. 
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -9,6 +34,7 @@
 #include <string.h>
 #include <stdio.h>
 
+/* TPROT protocol definitions */
 #include <tprot.h>
 
 /* Test TPROT Server Application */
@@ -65,6 +91,7 @@ int main(int argc, char **argv) {
 	 * Description:
 	 * -p $port 	: Listen on port $port
 	 * -v 		: Enable verbose output
+	 * -d		: Enable background mode
 	 *
 	 */
 	if (argc < 2) {
@@ -156,12 +183,14 @@ int main(int argc, char **argv) {
 	
 	/* Main server routine */
 	for (;;) {
+		/* Wait until connecion is created */
 		read_fds = master_fds;
 		if (select(fd_max + 1, &read_fds, NULL, NULL, NULL) < 0) {
 			perror("select");
 			exit(-1);
 		}
 
+		/* Go through all open descriptors to process the requests */
 		for (i = 0; i <= fd_max; i++) {
 			if (FD_ISSET(i, &read_fds)) {
 				if (i == server_sock) {
@@ -231,7 +260,7 @@ int main(int argc, char **argv) {
 						/* Get TPROT data (optional) */
 						if ((tprot_data = tprot_get_data(buf, MAXLEN)) != NULL)
 							if (debug != 0)
-								printf("TPROT Server: Packet data available:\n--------\n%s\n--------\n", buf);
+								printf("TPROT Server: Packet data available:|%s|\n", tprot_data);
 
 
 						/* TPROT state machine */
@@ -279,6 +308,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	/* Close network socket */
 	close(server_sock);
 
 	if (debug != 0)

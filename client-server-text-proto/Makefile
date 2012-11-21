@@ -3,36 +3,36 @@ OS	:=	$(shell uname)
 
 # Generic Declarations
 CC	=	cc
-CFLAGS	= 	-Wall -I. 
-LDFLAGS	=	
+CFLAGS	= 	-Wall -I.
+LDFLAGS	=
 
 STRIP	=	strip
 SRCCHK	=	cppcheck --enable=all
 
 # Server CFLAGS and LDFLAGS
 S_CFLAGS	=
-S_LDFLAGS	=	
+S_LDFLAGS	=
 
 # Client CFLAGS and LDFLAGS
 C_CFLAGS	=
-C_LDFLAGS	=	
+C_LDFLAGS	=
 
 # Debug (make DEBUG=yes $target)
 ifeq ($(DEBUG), yes)
-	CFLAGS		+= 	-g
+	CFLAGS		+= -g
 endif
 
 # OS-specific 
 ifeq ("${OS}", "Linux")
-	CFLAGS 		+= 	-DLINUX
+	CFLAGS 		+= -DLINUX
 	S_CFLAGS	+=
 	S_LDFLAGS	+=
 	C_CFLAGS	+=
-	C_LDFLAGS	+=	
+	C_LDFLAGS	+=
 endif
 
 ifeq ("${OS}", "FreeBSD")
-	CFLAGS		+= 	-DFREEBSD
+	CFLAGS		+= -DFREEBSD
 	S_CFLAGS	+=
 	S_LDFLAGS	+=
 	C_CFLAGS	+=
@@ -40,16 +40,16 @@ ifeq ("${OS}", "FreeBSD")
 endif
 
 # Server Source and Object Files
-S_SRC	=	server-text-proto.c tprot.c
-S_OBJ	=	server-text-proto.o tprot.o
+S_SRC	= server-text-proto.c tprot.c
+S_OBJ	= server-text-proto.o tprot.o
 
 # Client Source and Object Files
-C_SRC	=	client-text-proto.c tprot.c
-C_OBJ	=	client-text-proto.o tprot.o
+C_SRC	= client-text-proto.c tprot.c
+C_OBJ	= client-text-proto.o tprot.o
 
 # Binary file names
-SERVER	=	server-text-proto
-CLIENT	=	client-text-proto
+SERVER	= server-text-proto
+CLIENT	= client-text-proto
 
 all: $(S_SRC) $(C_SRC)
 	$(CC) $(CFLAGS) $(C_CFLAGS) $(S_CFLAGS) -c *.c
