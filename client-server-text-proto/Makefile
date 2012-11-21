@@ -7,6 +7,7 @@ CFLAGS	= 	-Wall -I.
 LDFLAGS	=	
 
 STRIP	=	strip
+SRCCHK	=	cppcheck --enable=all
 
 # Server CFLAGS and LDFLAGS
 S_CFLAGS	=
@@ -62,6 +63,10 @@ client: $(C_SRC)
 server: $(S_SRC)
 	$(CC) $(CFLAGS) $(S_CFLAGS) -c $(S_SRC)
 	$(CC) $(CFLAGS) $(S_CFLAGS) -o $(SERVER) $(S_OBJ) $(LDFLAGS) $(S_LDFLAGS)
+
+static-check: $(S_SRC) $(C_SRC)
+	$(SRCCHK) $(S_SRC) 
+	$(SRCCHK) $(C_SRC)
 
 install: all
 	@echo "NOT IMPLEMENTED!"
