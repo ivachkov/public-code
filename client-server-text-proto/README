@@ -1,0 +1,47 @@
+Sample text-based protocol (TPROT) for client-server communication
+
+I. Description
+
+TPROT is sample text-based protocol for client-server communication. The protocol follows the basic principles found in other popular text-based protocols like HTTP and RTSP for message structure and operation.
+
+
+II. Packet Decription
+
+Each TPROT packet contains the following fields:
+* Request/Response line
+* Sequence Number
+* Timestamp
+* Optional Data
+
+The following REQUEST messages are available:
+* PING 
+* PONG
+* SET_ARG
+* ACK
+* ERROR
+
+
+III. Packet flow
+
+The following packet flows are valid and available:
+* Client checks server
+	C: PING
+	S: PONG
+* Client Sets data on server
+	C: SET_ARG
+	S: ACK (if successfull)
+
+	C: SET_ARG
+	S: ERROR (if unsuccessfull)
+
+
+IV. Packet structure
+
+Every packet has the following structure:
+/* Begin packet */
+Method: METHOD RESOURCE\r\n
+SeqNo: SEQUENCE_NUMBER\r\n
+Timestamp: TIMESTAMP\r\n
+Data: DATA\r\n
+/* End packet */
+
