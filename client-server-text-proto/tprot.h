@@ -15,13 +15,6 @@ typedef enum {
 	TPROT_ERROR
 } tprot_method_t;
 
-typedef struct __tprot_packet {
-	tprot_method_t method;
-	char resource[128];
-	unsigned int seqno;
-	char data[1024];
-} tprot_packet_t;
-
 /* Packet parsing primitives */
 tprot_method_t tprot_get_method(char *buf, unsigned int len);
 char * tprot_get_resource(char *buf, unsigned int len);

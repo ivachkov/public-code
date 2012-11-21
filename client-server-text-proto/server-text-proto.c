@@ -27,7 +27,6 @@ int main(int argc, char **argv) {
 
 	/* Read packet buffer */
 	char buf[MAXLEN];
-	size_t read_bytes = 0;
 
 	/* select() specific variables */
 	fd_set master_fds;
@@ -42,6 +41,7 @@ int main(int argc, char **argv) {
 	char *tprot_data = NULL;
 
 	/* Misc. */
+	char prog_name[64];
 	unsigned int debug = 0;
 	unsigned int daemonize = 0;
 	unsigned int yes = 1;
@@ -50,6 +50,8 @@ int main(int argc, char **argv) {
 
 	/* Inialize */
 	memset(buf, 0, MAXLEN);
+	memset(prog_name, 0, 64);
+	strncpy(prog_name, argv[0], 64);
 
 	FD_ZERO(&master_fds);
 	FD_ZERO(&read_fds);	
@@ -66,7 +68,7 @@ int main(int argc, char **argv) {
 	 *
 	 */
 	if (argc < 2) {
-		printf("\n\tUsage: %s -p $port [-v] [-d]\n", argv[0]);
+		printf("\n\tUsage: %s -p $port [-v] [-d]\n", prog_name);
 		printf("\t\t-p $port: Use $port port\n");
 		printf("\t\t-v: Output Debug Information\n");
 		printf("\t\t-d: Daemonize Process\n");
@@ -87,7 +89,7 @@ int main(int argc, char **argv) {
                         server_port = atoi(optarg);
                         break;
                 default:
-			printf("\n\tUsage: %s -p $port [-v] [-d]\n", argv[0]);
+			printf("\n\tUsage: %s -p $port [-v] [-d]\n", prog_name);
 			printf("\t\t-p $port: Use $port port\n");
 			printf("\t\t-v: Output Debug Information\n");
 			printf("\t\t-d: Daemonize Process\n");
@@ -100,14 +102,14 @@ int main(int argc, char **argv) {
 
 	/* Daemon processes can not write debug info on console */
 	if (daemonize == 1 && debug == 1) {
-		printf("%s: Daemon processes can not write debug information on console!\n", argv[0]);
+		printf("%s: Daemon processes can not write debug information on console!\n", prog_name);
 		printf("\tPlease use either -v or -d, but not both!\n");
 		exit(-1);
 	}
 
 	/* Check if server port is below 1024 and it is possible to open */
-	if (server_port <= 1024 && getpid() == 0) {
-		printf("%s: Please use port above 1024 or run the application as root!\n", argv[0]);
+	if (server_port <= 1024 && getpid() != 0) {
+		printf("%s: Please use port above 1024 or run the application as root!\n", prog_name);
 		exit(-1);
 	}
 
@@ -180,7 +182,7 @@ int main(int argc, char **argv) {
 				} else {
 					/* Read data from client */
 					memset(buf, 0, MAXLEN);
-					if ((read_bytes = recv(i, buf, MAXLEN, 0)) <= 0) {
+					if (recv(i, buf, MAXLEN, 0) <= 0) {
 						/* Closed socket or error on read - close anyway */
 						close(i);
 						/* Remove from select() pool */
