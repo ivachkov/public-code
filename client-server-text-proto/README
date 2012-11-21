@@ -39,7 +39,7 @@ IV. Packet structure
 
 Every packet has the following structure:
 /* Begin packet */
-Method: METHOD RESOURCE\r\n
+METHOD RESOURCE\r\n
 SeqNo: SEQUENCE_NUMBER\r\n
 Timestamp: TIMESTAMP\r\n
 Data: DATA\r\n
