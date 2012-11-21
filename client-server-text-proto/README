@@ -38,10 +38,8 @@ The following packet flows are valid and available:
 IV. Packet structure
 
 Every packet has the following structure:
-/* Begin packet */
-METHOD RESOURCE\r\n
-SeqNo: SEQUENCE_NUMBER\r\n
-Timestamp: TIMESTAMP\r\n
-Data: DATA\r\n
-/* End packet */
+	METHOD RESOURCE\r\n
+	SeqNo: SEQUENCE_NUMBER\r\n
+	Timestamp: TIMESTAMP\r\n
+	Data: DATA\r\n
 
