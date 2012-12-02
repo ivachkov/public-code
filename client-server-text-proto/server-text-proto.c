@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
 	/* Server and client sockets */
 	int server_sock = -1;
 	int client_sock = -1;
+	int start_sock = -1;
 
 	/* Port the server listens on */
 	unsigned int server_port = 0;
@@ -175,7 +176,7 @@ int main(int argc, char **argv) {
 
 	/* Add server socket to the select() fd set */
 	FD_SET(server_sock, &master_fds);
-	fd_max = server_sock;
+	start_sock = fd_max = server_sock;
 
 	if (debug != 0)
 		printf("TPROT Server: Server boots up ...\n");
@@ -191,7 +192,7 @@ int main(int argc, char **argv) {
 		}
 
 		/* Go through all open descriptors to process the requests */
-		for (i = 0; i <= fd_max; i++) {
+		for (i = start_sock; i <= fd_max; i++) {
 			if (FD_ISSET(i, &read_fds)) {
 				if (i == server_sock) {
 					/* Accept client connection */
@@ -316,4 +317,3 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-
