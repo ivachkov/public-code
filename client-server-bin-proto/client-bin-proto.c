@@ -38,7 +38,7 @@
 /* BPROT protocol definitions */
 #include <bprot.h>
 
-/* Test TPROT Client Application */
+/* Test BPROT Client Application */
 int main(int argc, char **argv)
 {
 	/* Client socket */
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 	char line[MAXLEN];
 	char choice = '\0';
 
-	/* TPROT specific variables */
+	/* BPROT specific variables */
 	int seq_no = 0;
 
 	/* Misc. */
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 	/* Check for minimum number of parameters 
 	 *
 	 * Format: 
-	 * 	./client-text-proto -s $address -p $port
+	 * 	./client-bin-proto -s $address -p $port
 	 *
 	 * Description:
 	 * -s $address	: Server address to connect to
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	/* Initialise TPROT Client Socket */
+	/* Initialise BPROT Client Socket */
 	if ((client_sock = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol)) < 0) {
 		perror("socket");
 		exit(-1);
@@ -137,9 +137,8 @@ int main(int argc, char **argv)
 
 		printf("Please choose:\n");
 		printf("\t1. Send PING to server\n");
-		printf("\t2. Send SET_ARG to valid resource on server\n");
-		printf("\t3. Send SET_ARG to invalid resource on server\n");
-		printf("\t4. Send erroneous message (TPROT_ERROR) to server\n");
+		printf("\t2. Send DATA to server\n");
+		printf("\t3. Send erroneous message (BPROT_ERROR) to server\n");
 		printf("\t9. Exit\n");
 
 		/* Securely read from input stream */
@@ -151,8 +150,8 @@ int main(int argc, char **argv)
 			
 			switch (choice) {
 			case '1':
-				printf("Sending TPROT_PING to server ...\n");
-				if (tprot_send_ping(client_sock, "/test", ++seq_no, time(NULL), "TEST") < 0) {
+				printf("Sending BPROT_PING to server ...\n");
+				if (bprot_send_ping(client_sock, ) < 0) {
 					printf("Sending failed!\n");
 					goto termination;
 				}
@@ -162,18 +161,11 @@ int main(int argc, char **argv)
 					printf("Reading failed!\n");
 					goto termination;
 				}
-				printf("Data received:\n--------\n%s\n--------\n", buf);
-
-				/* Update sequence number */
-				if ((seq_no = tprot_get_seqno(buf, MAXLEN)) < 0) {
-					printf("Problem parsing returned sequence number!\n");
-					goto termination;
-				}
 
 				break;
 			case '2':
-				printf("Sending valid TPROT_SET_ARG to server ...\n");
-				if (tprot_send_set_arg(client_sock, "/allowed", ++seq_no, time(NULL), "TEST") < 0) {
+				printf("Sending valid BPROT_SET_ARG to server ...\n");
+				if (bprot_send_set_arg(client_sock, ) < 0) {
 					printf("Sending failed!\n");
 					goto termination;
 				}
@@ -183,38 +175,10 @@ int main(int argc, char **argv)
 					printf("Reading failed!\n");
 					goto termination;
 				}
-				printf("Data received:\n--------\n%s\n--------\n", buf);
-
-				/* Update sequence number */
-				if ((seq_no = tprot_get_seqno(buf, MAXLEN)) < 0) {
-					printf("Problem parsing returned sequence number!\n");
-					goto termination;
-				}
 
 				break;
 			case '3':
-				printf("Sending invalid TPROT_SET_ARG to server ...\n");
-				if (tprot_send_set_arg(client_sock, "/not_allowed", ++seq_no, time(NULL), "TEST") < 0) {
-					printf("Sending failed!\n");
-					goto termination;
-				}
-
-				printf("Reading response from server (expecting ERROR) ...\n");
-				if (recv(client_sock, buf, MAXLEN, 0) < 0) {
-					printf("Reading failed!\n");
-					goto termination;
-				}
-				printf("Data received:\n--------\n%s\n--------\n", buf);
-
-				/* Update sequence number */
-				if ((seq_no = tprot_get_seqno(buf, MAXLEN)) < 0) {
-					printf("Problem parsing returned sequence number!\n");
-					goto termination;
-				}
-
-				break;
-			case '4':
-				printf("Sending invalid request (TPROT_ERROR) to server ...\n");
+				printf("Sending invalid request (BPROT_ERROR) to server ...\n");
 				if (tprot_send_error(client_sock, "/error", ++seq_no, time(NULL)) < 0) {
 					printf("Sending failed!\n");
 					goto termination;
@@ -262,4 +226,3 @@ termination:
 
 	return 0;
 }
-

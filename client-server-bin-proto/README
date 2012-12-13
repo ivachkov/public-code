@@ -2,18 +2,44 @@ Sample binary-based protocol (BPROT) for client-server communications
 
 I. Description
 
+BPROT is sample binary-based protocol for client-server communication. The protocol follows the basic principles found in other popular binary-based protocols like IP for message structure and operations.
 
 
 II. Packet Description
 
+Each BPROT packet contains the following fields:
+* Version (4 bits)
+* Flags (4 bits)
+* Type (8 bits)
+* Data Size (16 bits)
+* Optional Data
+
+The following values are expected/used:
+* Version - 13
+* Flags
+	* F1 - 0x01
+	* F2 - 0x02
+	* F3 - 0x04
+	* F4 - 0x08
+* Type
+	* PING
+	* PONG
+	* DATA
+	* ACK
+	* ERROR
+* Data Size - unsigned integer
+* Data - character array	
 
 
 III. Packet Flow
 
+The following packet flows are valid and available:
+* Client checks server
+	C: PING, F1, Optional data
+	S: PONG, F2, Client data (if any)
+* Client sends data to serve
+	C: DATA, F3, Data
+	S: ACK, F3 (if successfull)
 
-
-IV. Packet Structure
-
-
-
-
+	C: DATA, F3, Data
+	S: ERROR, F4 (if unsuccessfull)

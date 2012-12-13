@@ -60,11 +60,11 @@ int main(int argc, char **argv) {
 	int fd_max = -1;
 
 	/* TPROT specific variables */
-	tprot_method_t tprot_method = TPROT_UNKNOWN;
-	char *tprot_resource = NULL;
-	int tprot_seqno = -1;
-	time_t tprot_timestamp = -1;
-	char *tprot_data = NULL;
+	bprot_type_t bprot_type = BPROT_UNKNOWN;
+	unsigned int bprot_version = 0;
+	unsigned int bprot_flags = 0;
+	unsigned int bprot_data_size = 0;
+	char *bprot_data = NULL;
 
 	/* Misc. */
 	char prog_name[64];
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
 	/* Check for minimum number of parameters 
 	 *
 	 * Format: 
-	 * 	./server-text-proto -p $port [-v]
+	 * 	./server-bin-proto -p $port [-v]
 	 *
 	 * Description:
 	 * -p $port 	: Listen on port $port
@@ -147,16 +147,16 @@ int main(int argc, char **argv) {
 			exit(-1);
 		}
 	
-	/* Initialise TPROT Server Socket */
+	/* Initialise BPROT Server Socket */
 	if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		perror("socket");
 		exit(-1);
 	}
 
 	/* Set protocol family, address to bind to and port to use */
-	tprot_server_addr.sin_family = AF_INET;
-	tprot_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	tprot_server_addr.sin_port = htons(server_port);
+	bprot_server_addr.sin_family = AF_INET;
+	bprot_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	bprot_server_addr.sin_port = htons(server_port);
 
 	/* Quickly reuse address and port */
 	if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) {
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* Bind application to specified address and port */
-	if (bind(server_sock, (struct sockaddr *)&tprot_server_addr, sizeof(struct sockaddr)) < 0) {
+	if (bind(server_sock, (struct sockaddr *)&bprot_server_addr, sizeof(struct sockaddr)) < 0) {
 		perror("bind");
 		exit(-1);
 	}
@@ -195,8 +195,8 @@ int main(int argc, char **argv) {
 			if (FD_ISSET(i, &read_fds)) {
 				if (i == server_sock) {
 					/* Accept client connection */
-					tprot_client_addr_len = sizeof(struct sockaddr);
-					if ((client_sock = accept(server_sock, (struct sockaddr *)&tprot_client_addr, &tprot_client_addr_len)) < 0) {
+					bprot_client_addr_len = sizeof(struct sockaddr);
+					if ((client_sock = accept(server_sock, (struct sockaddr *)&bprot_client_addr, &bprot_client_addr_len)) < 0) {
 						perror("accept");
 						exit(-1);
 					}
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
 						fd_max = client_sock;
 
 					if (debug != 0)
-						printf("TPROT Server: Incoming connection from: %s\n", inet_ntoa(tprot_client_addr.sin_addr));
+						printf("TPROT Server: Incoming connection from: %s\n", inet_ntoa(bprot_client_addr.sin_addr));
 				} else {
 					/* Read data from client */
 					memset(buf, 0, MAXLEN);
@@ -219,89 +219,44 @@ int main(int argc, char **argv) {
 					} else {
 						/* Data is available for processing */
 						if (debug != 0)
-							printf("TPROT Server: Packet received:\n--------\n%s\n--------\n", buf);
+							printf("BPROT Server: Packet received:\n--------\n%s\n--------\n", buf);
 
-						/* Get TPROT method (mandatory) */
-						if ((tprot_method = tprot_get_method(buf, MAXLEN)) == TPROT_UNKNOWN) {
+						/* Get BPROT method (mandatory) */
+						if ((bprot_type = bprot_get_type(buf, MAXLEN)) == BPROT_UNKNOWN) {
 							if (debug != 0)
-								printf("TPROT Server: Unknown TPROT method!\n");
+								printf("BPROT Server: Unknown BPROT method!\n");
 							continue;
 						}
 
-						/* Get TPROT resource (mandatory) */
-						if ((tprot_resource = tprot_get_resource(buf, MAXLEN)) == NULL) {
-							if (debug != 0)
-								printf("TPROT Server: Missing resource ID!\n");
-							continue;
-						}
+						/* Get BPROT */
 
-						/* Get TPROT sequence number (mandatory) */
-						if ((tprot_seqno = tprot_get_seqno(buf, MAXLEN)) == -1) {
-							if (debug != 0)
-								printf("TPROT Server: Missing or bad sequence number!\n");
+						/* Get BPROT  */
 
-							if (tprot_resource != NULL)
-								free(tprot_resource);
+						/* Get BPROT  */
 
-							continue;
-						}
-
-						/* Get TPROT timestamp (mandatory) */
-						if ((tprot_timestamp = tprot_get_timestamp(buf, MAXLEN)) == -1) {
-							if (debug != 0)
-								printf("TPROT Server: Missing or bad timestamp!\n");
-
-							if (tprot_resource != NULL)
-								free(tprot_resource);
-
-							continue;
-						}
-
-						/* Get TPROT data (optional) */
-						if ((tprot_data = tprot_get_data(buf, MAXLEN)) != NULL)
-							if (debug != 0)
-								printf("TPROT Server: Packet data available:|%s|\n", tprot_data);
-
-
-						/* TPROT state machine */
-						switch (tprot_method) {
-						case TPROT_PING: /* TPROT_PING received, return TPROT_PONG */
-							if (tprot_send_pong(i, tprot_resource, ++tprot_seqno, time(NULL), tprot_data) < 0)
+						/* BPROT state machine */
+						switch (bprot_type) {
+						case BPROT_PING: /* BPROT_PING received, return BPROT_PONG */
+							// if (bprot_send_pong(i, data) < 0)
 								if (debug != 0)
-									printf("TPROT Server: Problem returning TPROT_PONG!\n");
+									printf("BPROT Server: Problem returning BPROT_PONG!\n");
 
 							break;
-						case TPROT_SET_ARG: /* TPROT_SET_ARG received, return TPROT_ACK or TPROT_ERROR */
-							if (strncmp(tprot_resource, "/allowed", strlen("/allowed")) == 0) {
-								/* Correct resource name */
-								if (tprot_send_ack(i, tprot_resource, ++tprot_seqno, time(NULL)) < 0)
-									if (debug != 0)
-										printf("TPROT Server: Problem returning TPROT_ACK!\n");
-							} else {
-								/* Incorrect resource name */
-								if (tprot_send_error(i, tprot_resource, ++tprot_seqno, time(NULL)) < 0)
-									if (debug != 0)
-										printf("TPROT Server: Problem returning TPROT_ERROR!\n");
-							}
-
-							break;
-						case TPROT_PONG: /* For all other cases, return TPROT_ERROR */
-						case TPROT_ACK:
-						case TPROT_ERROR:
-						case TPROT_UNKNOWN:
+						case BPROT_DATA:
+						case BPROT_PONG:
+						case BPROT_ACK:
+						case BPROT_ERROR:
 						default:
-							if (tprot_send_error(i, tprot_resource, ++tprot_seqno, time(NULL)) < 0)
+							if (bprot_send_error(i, 42) < 0)
 								if (debug != 0)
-									printf("TPROT Server: Problem returning TPROT_ERROR!\n");
+									printf("BPROT Server: Problem returning BPROT_ERROR!\n");
 
 							break;
 						}
 
 						/* Free allocated resources */
-						if (tprot_resource != NULL)
-							free(tprot_resource);
-						if (tprot_data != NULL)
-							free(tprot_data);
+						if (bprot_data != NULL)
+							free(bprot_data);
 					}
 				}
 			}
@@ -316,4 +271,3 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
-
