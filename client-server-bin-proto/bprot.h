@@ -66,14 +66,14 @@ int bprot_get_data_size(char *buf, unsigned int len);
 char * bprot_get_data(char *buf, unsigned int len);
 
 /* Send BPROT_PING and BPROT_PONG messages */
-int bprot_send_ping(int socket, int flags, char *data, unsigned int data_size);
-int bprot_send_pong(int socket, int flags, char *data, unsigned int data_size);
+int bprot_send_ping(int socket, char *data, unsigned int data_size);
+int bprot_send_pong(int socket, char *data, unsigned int data_size);
 
 /* Send BPROT_DATA message */
-int bprot_send_data(int socket, int flags, char *data, unsigned int data_size);
+int bprot_send_data(int socket, char *data, unsigned int data_size);
 
 /* Send BPROT_ACK and BPROT_ERROR messages */
-int bprot_send_ack(int socket, int flags);
-int bprot_send_error(int socket, int flags);
+int bprot_send_ack(int socket);
+int bprot_send_error(int socket);
 
 #endif
