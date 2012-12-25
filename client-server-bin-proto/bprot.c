@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -86,7 +87,7 @@ int bprot_get_data_size(char *buf, unsigned int len)
 	if (header->version != BPROT_VERSION)
 		return -1;
 
-	return header->data_size;
+	return ntohs(header->data_size);
 }
 
 /* Get Data from BPROT packet */
@@ -100,12 +101,12 @@ char * bprot_get_data(char *buf, unsigned int len)
 		return NULL;
 
 	/* Allocate storage for the packet data */
-	if ((data = malloc(header->data_size)) == NULL)
+	if ((data = malloc(ntohs(header->data_size))) == NULL)
 		return NULL;
 	
 	/* Copy the data starting right after the header */
-	memcpy(data, header + sizeof(header), header->data_size);
-	
+	memcpy(data, buf + sizeof(bprot_header_t), ntohs(header->data_size));
+
 	return data;
 }
 
@@ -116,17 +117,17 @@ int bprot_send_ping(int socket, char *data, unsigned int data_size)
 	bprot_header_t	*header = (bprot_header_t *)buf;
 
 	memset(buf, 0, MAXLEN);
-	
+
 	header->version = BPROT_VERSION;
 	header->flags = BPROT_F1;
 	header->type = BPROT_PING;
 	
 	if (data != NULL && data_size > 0) {
-		header->data_size = data_size;
+		header->data_size = htons(data_size);
 		memcpy(buf + sizeof(bprot_header_t), data, data_size);
 	}
-	
-	if (send(socket, buf, sizeof(bprot_header_t) + header->data_size, 0) < sizeof(bprot_header_t) + header->data_size)
+
+	if (send(socket, buf, sizeof(bprot_header_t) + data_size, 0) < sizeof(bprot_header_t) + data_size)
 		return -1;
 
 	return 0;
@@ -145,11 +146,11 @@ int bprot_send_pong(int socket, char *data, unsigned int data_size)
 	header->type = BPROT_PONG;
 	
 	if (data != NULL && data_size > 0) {
-		header->data_size = data_size;
+		header->data_size = htons(data_size);
 		memcpy(buf + sizeof(bprot_header_t), data, data_size);
 	}
 	
-	if (send(socket, buf, sizeof(bprot_header_t) + header->data_size, 0) < sizeof(bprot_header_t) + header->data_size)
+	if (send(socket, buf, sizeof(bprot_header_t) + data_size, 0) < sizeof(bprot_header_t) + data_size)
 		return -1;
 		
 	return 0;
@@ -162,18 +163,18 @@ int bprot_send_data(int socket, char *data, unsigned int data_size)
 	bprot_header_t	*header = (bprot_header_t *)buf;
 
 	memset(buf, 0, MAXLEN);
-
+	
 	header->version = BPROT_VERSION;
 	header->flags = BPROT_F3;
-	header->type = BPROT_PING;
+	header->type = BPROT_DATA;
 	
 	if (data != NULL && data_size > 0) {
-		header->data_size = data_size;
+		header->data_size = htons(data_size);
 		memcpy(buf + sizeof(bprot_header_t), data, data_size);
 	} else
 		return -1;
 	
-	if (send(socket, buf, sizeof(bprot_header_t) + header->data_size, 0) < sizeof(bprot_header_t) + header->data_size)
+	if (send(socket, buf, sizeof(bprot_header_t) + data_size, 0) < sizeof(bprot_header_t) + data_size)
 		return -1;
 		
 	return 0;
@@ -190,7 +191,7 @@ int bprot_send_ack(int socket)
 	header->version = BPROT_VERSION;
 	header->flags = BPROT_F3;
 	header->type = BPROT_ACK;
-	header->data_size = 0;
+	header->data_size = htons(0);
 
 	if (send(socket, buf, sizeof(bprot_header_t), 0) < sizeof(bprot_header_t))
 		return -1;
@@ -209,7 +210,7 @@ int bprot_send_error(int socket)
 	header->version = BPROT_VERSION;
 	header->flags = BPROT_F4;
 	header->type = BPROT_ERROR;
-	header->data_size = 0;
+	header->data_size = htons(0);
 	
 	if (send(socket, buf, sizeof(bprot_header_t), 0) < sizeof(bprot_header_t))
 		return -1;

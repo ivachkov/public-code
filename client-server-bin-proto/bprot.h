@@ -53,11 +53,6 @@ typedef struct _header_t {
 	unsigned short data_size;
 } bprot_header_t;
 
-typedef union {
-	bprot_header_t h_fields;
-	unsigned int h_word;
-} bprot_packet_t;
-
 /* Packet parsing primitives */
 int bprot_get_version(char *buf, unsigned int len);
 int bprot_check_flag(char *buf, unsigned int len, unsigned int flag);

@@ -61,9 +61,7 @@ int main(int argc, char **argv) {
 
 	/* TPROT specific variables */
 	bprot_type_t bprot_type = BPROT_UNKNOWN;
-	unsigned int bprot_version = 0;
-	unsigned int bprot_flags = 0;
-	unsigned int bprot_data_size = 0;
+	int bprot_data_size = -1;
 	char *bprot_data = NULL;
 
 	/* Misc. */
@@ -178,7 +176,7 @@ int main(int argc, char **argv) {
 	fd_max = server_sock;
 
 	if (debug != 0)
-		printf("TPROT Server: Server boots up ...\n");
+		printf("BPROT Server: Server boots up ...\n");
 
 	
 	/* Main server routine */
@@ -207,7 +205,7 @@ int main(int argc, char **argv) {
 						fd_max = client_sock;
 
 					if (debug != 0)
-						printf("TPROT Server: Incoming connection from: %s\n", inet_ntoa(bprot_client_addr.sin_addr));
+						printf("BPROT Server: Incoming connection from: %s\n", inet_ntoa(bprot_client_addr.sin_addr));
 				} else {
 					/* Read data from client */
 					memset(buf, 0, MAXLEN);
@@ -219,44 +217,114 @@ int main(int argc, char **argv) {
 					} else {
 						/* Data is available for processing */
 						if (debug != 0)
-							printf("BPROT Server: Packet received:\n--------\n%s\n--------\n", buf);
+							printf("BPROT Server: Packet received!\n");
 
-						/* Get BPROT method (mandatory) */
-						if ((bprot_type = bprot_get_type(buf, MAXLEN)) == BPROT_UNKNOWN) {
+						/* Get BPROT version */
+						if (bprot_get_version(buf, MAXLEN) != BPROT_VERSION) {
 							if (debug != 0)
-								printf("BPROT Server: Unknown BPROT method!\n");
+								printf("BPROT Server: Unsupported BPROT version!\n");
 							continue;
 						}
-
-						/* Get BPROT */
-
-						/* Get BPROT  */
-
-						/* Get BPROT  */
+						
+						/* Get BPROT type (mandatory) */
+						if ((bprot_type = bprot_get_type(buf, MAXLEN)) == BPROT_UNKNOWN) {
+							if (debug != 0)
+								printf("BPROT Server: Unknown BPROT packet type!\n");
+							continue;
+						}
+						
 
 						/* BPROT state machine */
 						switch (bprot_type) {
-						case BPROT_PING: /* BPROT_PING received, return BPROT_PONG */
-							// if (bprot_send_pong(i, data) < 0)
-								if (debug != 0)
-									printf("BPROT Server: Problem returning BPROT_PONG!\n");
+						case BPROT_PING:							
+							/* BPROT_PING received, return BPROT_PONG */
+							if (debug != 0)
+								printf("BPROT Server: Received BPROT_PING, returning BPROT_PONG!\n");
 
+							/* Checking flag */
+							if (bprot_check_flag(buf, MAXLEN, BPROT_F1) != 1) {
+								if (debug != 0)
+									printf("BPROT Server: Received wrong flags!\n");
+								break;
+							}
+							
+							/* Checking data size */
+							if ((bprot_data_size = bprot_get_data_size(buf, MAXLEN)) != -1) {
+								if (debug != 0)
+									printf("BPROT Server: Data size: %d\n", bprot_data_size);
+							} else {
+								if (debug != 0)
+									printf("BPROT Server: Wrong data size (%d) or malformed packet!\n", bprot_data_size);
+								break;
+							}
+				
+							/* Checking data */
+							if ((bprot_data = bprot_get_data(buf, MAXLEN)) != NULL)
+								if (debug != 0)
+									printf("BPROT Server: Received data: %s\n", bprot_data);
+							
+							if (bprot_send_pong(i, bprot_data != NULL ? bprot_data : NULL, bprot_data != NULL ? bprot_data_size : 0) != 0)
+								if (debug != 0)
+									printf("BPROT Server: Unable to send BPROT_PONG message!\n");
+							
 							break;
 						case BPROT_DATA:
+							/* BPROT_DATA received, return BPROT_ACK or BPROT_ERROR */
+							if (debug != 0)
+								printf("BPROT Server: Received BPROT_DATA, returning BPROT_ACK or BPORT_ERROR!\n");
+
+ 							/* Checking flag */
+							if (bprot_check_flag(buf, MAXLEN, BPROT_F3) != 1) {
+								if (debug != 0)
+									printf("BPROT Server: Received wrong flags!\n");
+								break;
+							}
+
+							/* Checking data size */
+							if ((bprot_data_size = bprot_get_data_size(buf, MAXLEN)) != -1) {
+								if (debug != 0)
+									printf("BPROT Server: Data size: %d\n", bprot_data_size);
+							} else {
+								if (debug != 0)
+									printf("BPROT Server: Wrong data size (%d) or malformed packet!\n", bprot_data_size);
+								break;
+							}
+
+							/* Checking data */
+							if ((bprot_data = bprot_get_data(buf, MAXLEN)) != NULL)
+								if (debug != 0)
+									printf("BPROT Server: Received data: %s\n", bprot_data);
+
+							if (memcmp(bprot_data, "TEST\0", sizeof("TEST\0")) == 0) {
+								if (bprot_send_ack(i) != 0)
+									if (debug != 0)
+										printf("BPROT Server: Unable to send BPROT_ACK message!\n");
+							} else {
+								if (bprot_send_error(i) != 0)
+									if (debug != 0)
+										printf("BPROT Server: Unable to send BPROT_ERROR message!\n");
+							}
+
+							break;
 						case BPROT_PONG:
 						case BPROT_ACK:
 						case BPROT_ERROR:
 						default:
-							if (bprot_send_error(i, 42) < 0)
-								if (debug != 0)
-									printf("BPROT Server: Problem returning BPROT_ERROR!\n");
+							/* Errorneous message received, returning BPROT_ERROR */
+							if (debug != 0)
+								printf("BPROT Server: Errorneous message received, returning BPROT_ERROR!\n");
+
+							if (bprot_send_error(i) < 0)
+								printf("BPROT Server: Unable to send BPROT_ERROR message!\n");
 
 							break;
 						}
 
 						/* Free allocated resources */
-						if (bprot_data != NULL)
+						if (bprot_data != NULL) {
 							free(bprot_data);
+							bprot_data = NULL;
+						}
 					}
 				}
 			}
@@ -267,7 +335,7 @@ int main(int argc, char **argv) {
 	close(server_sock);
 
 	if (debug != 0)
-		printf("TPROT Server: Server shuts down ...\n");
+		printf("BPROT Server: Server shuts down ...\n");
 
 	return 0;
 }

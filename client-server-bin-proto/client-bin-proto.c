@@ -54,13 +54,15 @@ int main(int argc, char **argv)
 
 	/* Read packet buffer */
 	char buf[MAXLEN];
+	char *data = NULL;
 
 	/* User inputs */
 	char line[MAXLEN];
 	char choice = '\0';
-
-	/* BPROT specific variables */
-	int seq_no = 0;
+	
+	/* Test data */
+	char test_data[] = { 'T', 'E', 'S', 'T', '\0' };
+	char invalid_data[] = { 'I', 'N', 'V', 'A', 'L', 'I', 'D', '\0' };
 
 	/* Misc. */
 	char prog_name[64];
@@ -126,7 +128,7 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	/* Connect to TPROT Server */
+	/* Connect to BPROT Server */
 	if (connect(client_sock, addr_info->ai_addr, addr_info->ai_addrlen) < 0) {
 		perror("connect");
 		exit(-1);
@@ -137,8 +139,9 @@ int main(int argc, char **argv)
 
 		printf("Please choose:\n");
 		printf("\t1. Send PING to server\n");
-		printf("\t2. Send DATA to server\n");
-		printf("\t3. Send erroneous message (BPROT_ERROR) to server\n");
+		printf("\t2. Send valid DATA to server\n");
+		printf("\t3. Send invalid DATA to server\n");
+		printf("\t4. Send erroneous message (BPROT_ERROR) to server\n");
 		printf("\t9. Exit\n");
 
 		/* Securely read from input stream */
@@ -150,52 +153,153 @@ int main(int argc, char **argv)
 			
 			switch (choice) {
 			case '1':
+				/* Sending request to server */
 				printf("Sending BPROT_PING to server ...\n");
-				if (bprot_send_ping(client_sock, ) < 0) {
+				if (bprot_send_ping(client_sock, test_data, sizeof(test_data)) < 0) {
 					printf("Sending failed!\n");
 					goto termination;
 				}
 
+				/* Getting response from server */
 				printf("Reading response from server (expecting PONG) ...\n");
-				if (recv(client_sock, buf, MAXLEN, 0) < 0) {
+				if (recv(client_sock, buf, MAXLEN, 0) <= 0) {
 					printf("Reading failed!\n");
 					goto termination;
 				}
 
+				/* Checking versions */
+				if (bprot_get_version(buf, MAXLEN) != BPROT_VERSION) {
+					printf("Received wrong version!\n");
+					goto termination;
+				}
+				
+				/* Checking type */
+				if (bprot_get_type(buf, MAXLEN) != BPROT_PONG) {
+					printf("Received wrong type!\n");
+					goto termination;
+				}
+				
+				/* Checking flags */
+				if (bprot_check_flag(buf, MAXLEN, BPROT_F2) != 1) {
+					printf("Received wrong flags!\n");
+					goto termination;
+				}
+				
+				/* Checking data */
+				if ((data = bprot_get_data(buf, MAXLEN)) != NULL) {
+					printf("Received data: %s\n", data);
+					free(data); data = NULL;
+				}
+
+				printf("Successfull processing of BPROT_PING message!\n");
+				
 				break;
 			case '2':
-				printf("Sending valid BPROT_SET_ARG to server ...\n");
-				if (bprot_send_set_arg(client_sock, ) < 0) {
+				/* Sending request to server */
+				printf("Sending BPROT_DATA to server with valid data ...\n");
+				if (bprot_send_data(client_sock, test_data, sizeof(test_data)) < 0) {
 					printf("Sending failed!\n");
 					goto termination;
 				}
 
+				/* Getting response from server */
 				printf("Reading response from server (expecting ACK) ...\n");
-				if (recv(client_sock, buf, MAXLEN, 0) < 0) {
+				if (recv(client_sock, buf, MAXLEN, 0) <= 0) {
 					printf("Reading failed!\n");
 					goto termination;
 				}
+				
+				/* Checking versions */
+				if (bprot_get_version(buf, MAXLEN) != BPROT_VERSION) {
+					printf("Received wrong version!\n");
+					goto termination;
+				}
+				
+				/* Checking type */
+				if (bprot_get_type(buf, MAXLEN) != BPROT_ACK) {
+					printf("Received wrong type!\n");
+					goto termination;
+				}
+				
+				/* Checking flag */
+				if (bprot_check_flag(buf, MAXLEN, BPROT_F3) != 1) {
+					printf("Received wrong flags!\n");
+					goto termination;
+				}
+
+				printf("Successfull processing of BPROT_DATA message!\n");
 
 				break;
 			case '3':
-				printf("Sending invalid request (BPROT_ERROR) to server ...\n");
-				if (tprot_send_error(client_sock, "/error", ++seq_no, time(NULL)) < 0) {
+				/* Sending request to server */
+				printf("Sending BPROT_DATA to server with invalid data ...\n");
+				if (bprot_send_data(client_sock, invalid_data, sizeof(invalid_data)) < 0) {
 					printf("Sending failed!\n");
 					goto termination;
 				}
 
+				/* Getting response from server */
 				printf("Reading response from server (expecting ERROR) ...\n");
-				if (recv(client_sock, buf, MAXLEN, 0) < 0) {
+				if (recv(client_sock, buf, MAXLEN, 0) <= 0) {
 					printf("Reading failed!\n");
 					goto termination;
 				}
-				printf("Data received:\n--------\n%s\n--------\n", buf);
-
-				/* Update sequence number */
-				if ((seq_no = tprot_get_seqno(buf, MAXLEN)) < 0) {
-					printf("Problem parsing returned sequence number!\n");
+				
+				/* Checking versions */
+				if (bprot_get_version(buf, MAXLEN) != BPROT_VERSION) {
+					printf("Received wrong version!\n");
 					goto termination;
 				}
+				
+				/* Checking type */
+				if (bprot_get_type(buf, MAXLEN) != BPROT_ERROR) {
+					printf("Received wrong type!\n");
+					goto termination;
+				}
+				
+				/* Checking flag */
+				if (bprot_check_flag(buf, MAXLEN, BPROT_F4) != 1) {
+					printf("Received wrong flags!\n");
+					goto termination;
+				}
+
+				printf("Successfull processing of BPROT_DATA message!\n");
+
+				break;
+			case '4':
+				/* Sending request to server */
+				printf("Sending invalid request (BPROT_ERROR) to server ...\n");
+				if (bprot_send_error(client_sock) < 0) {
+					printf("Sending failed!\n");
+					goto termination;
+				}
+
+				/* Getting response from server */
+				printf("Reading response from server (expecting ERROR) ...\n");
+				if (recv(client_sock, buf, MAXLEN, 0) <= 0) {
+					printf("Reading failed!\n");
+					goto termination;
+				}
+
+				/* Checking versions */
+				if (bprot_get_version(buf, MAXLEN) != BPROT_VERSION) {
+					printf("Received wrong version!\n");
+					goto termination;
+				}
+				
+				/* Checking type */
+				if (bprot_get_type(buf, MAXLEN) != BPROT_ERROR) {
+					printf("Received wrong type!\n");
+					goto termination;
+				}
+				
+				/* Checking flag */
+				if (bprot_check_flag(buf, MAXLEN, BPROT_F4) != 1) {
+					printf("Received wrong flags!\n");
+					goto termination;
+				}
+				
+				printf("Successfull processing of BPROT_ERROR message!\n");
 
 				break;
 			case '9':
@@ -204,6 +308,12 @@ int main(int argc, char **argv)
 				break;
 			}
 
+			/* Cleaning-up resources */
+			if (data != NULL) {
+				free(data);
+				data = NULL;
+			}
+			
 			continue;
 		} else {
 			break;
