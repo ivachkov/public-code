@@ -4,7 +4,7 @@ OS	:=	$(shell uname)
 # Generic Declarations
 CC	=	cc
 CFLAGS	= 	-Wall -I.
-LDFLAGS	=
+LDFLAGS	=	-pthread
 
 STRIP	=	strip
 SRCCHK	=	cppcheck --enable=all
@@ -40,8 +40,8 @@ ifeq ("${OS}", "FreeBSD")
 endif
 
 # Server Source and Object Files
-S_SRC	= server-posix-threads.c 
-S_OBJ	= server-posix-threads.o 
+S_SRC	= server-posix-threads.c server-worker-thread.c
+S_OBJ	= server-posix-threads.o server-worker-thread.o
 
 # Client Source and Object Files
 C_SRC	= client-posix-threads.c 
