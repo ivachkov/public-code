@@ -126,7 +126,16 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	/* ... */
+	if (recv(client_sock, buf, MAXLEN, 0) <= 0) {
+		printf("Reading failed!\n");
+		goto termination;
+	}
+
+	printf("Received from server: |%s|\n", buf);
+	
+termination:
+	/* Close network socket */
+	close(client_sock);
 
 	return 0;
 }

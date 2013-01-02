@@ -23,22 +23,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #include <server-posix-threads.h>
 
 void * worker_thread(void *args)
 {
+	/* Data sent to thread */
 	thread_data_t *thread_data = (thread_data_t *)args;
 	
-	/* ... */
-	
+	/* Response buffer */
+	char buf[64];
+
 	/* Check for valid data */
 	if (thread_data == NULL)
 		pthread_exit(NULL);
 	
-	/* ... */
+	/* Detach self */
+	pthread_detach(pthread_self());
+	
+	/* Inialize */
+	memset(buf, 0, 64);
+	
+	/* Do some work ... */
+	strncpy(buf, "Data: ", strlen("Data: "));
+	strncat(buf, thread_data->data, strlen(thread_data->data) > (64 - strlen(buf)) ? strlen(thread_data->data) : (64 - strlen(buf)));
+	
+	if (send(thread_data->client_sock, buf, strlen(buf), 0) < strlen(buf))
+		goto err;
+
+	/* Other code, if necessary */
+
+err:
+	/* Free allocated resources */
+	close(thread_data->client_sock);
+	free(thread_data); thread_data = NULL;
 	
 	/* Exit thread */
 	pthread_exit(NULL);

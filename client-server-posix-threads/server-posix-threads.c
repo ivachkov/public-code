@@ -61,6 +61,7 @@ int main(int argc, char **argv)
 	unsigned int daemonize = 0;
 	unsigned int yes = 1;
 	char ch = '\0';
+	int data = 0;
 
 	/* Inialize */
 	memset(prog_name, 0, 64);
@@ -160,7 +161,7 @@ int main(int argc, char **argv)
 		printf("POSIX Thread Server: Server boots up ...\n");
 
 	/* Main Service Loop */
-	for(;;) {
+	for(;;data++) {
 		/* Accept client connection */
 		pth_client_addr_len = sizeof(struct sockaddr);
 
@@ -181,18 +182,21 @@ int main(int argc, char **argv)
 		
 		/* Set thread parameters */
 		thread_data->client_sock = client_sock;
-		/* ... */
+		snprintf(thread_data->data, 16, "%015d", data);
 
 		/* Create new thread for client */
-		if (pthread_create(&thread, NULL, worker_thread, (void *)NULL) != 0) {
+		if (pthread_create(&thread, NULL, worker_thread, (void *)thread_data) != 0) {
 			if (debug != 0)
 				printf("POSIX Thread Server: Unable to create new thread!\n");
 
 			close(client_sock);
+			free(thread_data); 
+			thread_data = NULL;
 			continue;
 		}
         }
 
+        /* Close network socket */
 	close(server_sock);
 
 	if (debug != 0)

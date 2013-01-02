@@ -29,7 +29,7 @@
 /* Data passed to worker threads */
 typedef struct _thread_data {
 	int client_sock;
-	/* ... */
+ 	char data[16];
 } thread_data_t;
 
 /* Main worker thread */
