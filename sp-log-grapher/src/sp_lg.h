@@ -37,4 +37,18 @@ typedef struct __event {
 	char			comment[256];
 } event_t;
 
+/* Time granularity units */
+typedef struct __time_unit {
+	struct timespec		ts;
+	uint32_t		t_utilization;
+	uint32_t		t_iops;
+	uint32_t		t_bps;
+	uint32_t		t_latency;
+	uint32_t		t_queue_depth;
+	float			a_op_size;
+	float			a_latency;
+	float			a_queue_depth;
+} time_unit_t;
+
 #endif
+

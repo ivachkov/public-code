@@ -1,7 +1,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
-#include <strings.h>
 #include <string.h>
+#include <strings.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
