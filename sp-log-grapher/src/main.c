@@ -31,10 +31,7 @@ int main(int argc, char **argv)
 	event_match_t		em;
 	event_store_t		ev_store;
 	stat_buf_t		sd_store;
-	time_unit_t		*tu = NULL;
-
-	// XXX:
-	time_unit_t		op_data[86400];
+	time_unit_t		tu[MAX_OP_TIMEOUT + 1];
 	
 	/* Check if enough parameters are present */
 	if (argc < 3) {
@@ -73,10 +70,7 @@ int main(int argc, char **argv)
 	memset(&em, 0, sizeof(struct __event_match));
 	memset(&ev_store, 0, sizeof(struct __event_store));
 	memset(&sd_store, 0, sizeof(struct __stat_data_buf));
-	
-	// XXX:
-	memset(op_data, 0, 86400 * sizeof(struct __time_unit));
-	
+		
 	/* Going through the log file line at a time */
 	while (!feof(f)) {
 		memset(line, 0, LOG_LINE_LEN);
@@ -197,10 +191,6 @@ int main(int argc, char **argv)
 			op_data[i].a_queue_depth = op_data[i].t_queue_depth / op_data[i].t_iops;
 		}
 	}
-	
-	/* XXX: print results */
-	for (i = 0; i < 86400; i++)
-		printf("TS: %u, UTIL: %u, IOPS: %u, BPS: %u, OP_SIZE: %f, LAT: %f, Q_LEN: %f\n", i, op_data[i].t_utilization, op_data[i].t_iops, op_data[i].t_bps, op_data[i].a_op_size, op_data[i].a_latency, op_data[i].a_queue_depth);
 	
 	/* Free allocated resources */
 	free(log_file); log_file = NULL;

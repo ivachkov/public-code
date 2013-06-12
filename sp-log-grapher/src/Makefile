@@ -1,6 +1,6 @@
 # Definitions 
 CC	=	gcc
-CFLAGS	=	-Wall -g -ansi -pedantic 
+CFLAGS	=	-Wall -Werror -g
 INC	=	-I. 
 LDFLAGS	=	
 

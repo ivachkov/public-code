@@ -28,5 +28,4 @@ typedef struct __stat_data_buf {
 	struct __stat_data_node	*last;
 } stat_buf_t;
 
-
 #endif
