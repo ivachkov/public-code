@@ -1,6 +1,6 @@
 # Definitions 
 CC	=	gcc
-CFLAGS	=	-Wall -Werror -g
+CFLAGS	=	-Wall -g
 INC	=	-I. 
 LDFLAGS	=	
 
@@ -16,4 +16,3 @@ all:
 
 clean:
 	rm -rf $(PROG) $(RELAY) *.o *.core
-

@@ -31,9 +31,9 @@ typedef struct __event {
 	struct timespec 	ts;
 	event_type_t		evt;
 	op_type_t		opt;
-	uint32_t		offset;
-	uint32_t		size;	/* in sectors, multiply by 512 for bytes */
-	uint32_t		pid;
+	uint64_t		offset;
+	uint64_t		size;	/* in sectors, multiply by 512 for bytes */
+	uint64_t		pid;
 	char			comment[256];
 } event_t;
 
@@ -42,8 +42,8 @@ typedef struct __time_unit {
 	struct timespec		ts;
 	uint32_t		t_utilization;
 	uint32_t		t_iops;
-	uint32_t		t_bps;
-	uint32_t		t_latency;
+	uint64_t		t_bps;
+	uint64_t		t_latency;
 	uint32_t		t_queue_depth;
 	float			a_op_size;
 	float			a_latency;
@@ -51,4 +51,3 @@ typedef struct __time_unit {
 } time_unit_t;
 
 #endif
-
