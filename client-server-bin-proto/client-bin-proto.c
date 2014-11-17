@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 	char choice = '\0';
 	
 	/* Test data */
-	char test_data[] = { 'T', 'E', 'S', 'T', '\0' };
+	char test_data[] = { 'A', 'B', 'C', 'D', '\0' };
 	char invalid_data[] = { 'I', 'N', 'V', 'A', 'L', 'I', 'D', '\0' };
 
 	/* Misc. */
