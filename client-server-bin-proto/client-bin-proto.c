@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 	char choice = '\0';
 	
 	/* Test data */
-	char test_data[] = { 'T', 'E', 'S', 'T', '\0' };
+	char test_data[] = { 'A', 'B', 'C', 'D', '\0' };
 	char invalid_data[] = { 'I', 'N', 'V', 'A', 'L', 'I', 'D', '\0' };
 
 	/* Misc. */
@@ -89,6 +89,7 @@ int main(int argc, char **argv)
 		printf("\n\tUsage: %s -s $address -p $port\n", prog_name);
 		printf("\t\t-s $address: Server address\n");
 		printf("\t\t-p $port: Server port\n");
+		printf("\n");
 		printf("\n");
 		exit(-1);
         }
