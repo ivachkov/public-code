@@ -90,6 +90,7 @@ int main(int argc, char **argv)
 		printf("\t\t-s $address: Server address\n");
 		printf("\t\t-p $port: Server port\n");
 		printf("\n");
+		printf("\n");
 		exit(-1);
         }
 
